@@ -1,0 +1,42 @@
+# Node.js dependencies and logs
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Rust and Tauri build output
+src-tauri/target/
+src-tauri/gen/
+target/
+
+# Packaged applications
+dist/
+
+# Runtime data
+data/
+logs/
+*.log
+
+# Local environment and editor files
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+.agents/
+*.user
+*.suo
+*.swp
+*~
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Test and tool caches
+.cache/
+.pytest_cache/
+__pycache__/
+*.py[cod]

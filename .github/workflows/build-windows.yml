@@ -1,0 +1,114 @@
+name: Build Windows
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache Rust build files
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
+      - name: Run Rust tests
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml
+
+      - name: Build NSIS and MSI installers
+        run: npm run tauri -- build --bundles nsis,msi
+
+      - name: Create portable package
+        shell: powershell
+        run: ./scripts/package-portable.ps1 -SkipBuild
+
+      - name: Stage packages and calculate SHA-256 hashes
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ArtifactRoot = Join-Path $PWD "dist\artifacts"
+          $ArtifactDirectory = Join-Path $ArtifactRoot "EyeRest"
+          $PortableDirectory = Join-Path $PWD "dist\portable\EyeRest"
+          $PortablePackageRoot = Join-Path $PWD "dist\portable-package"
+          $PortablePackageDirectory = Join-Path $PortablePackageRoot "EyeRest-portable"
+          $BundleDirectory = Join-Path $PWD "src-tauri\target\release\bundle"
+
+          if (Test-Path -LiteralPath $ArtifactRoot) {
+            Remove-Item -LiteralPath $ArtifactRoot -Recurse -Force
+          }
+          New-Item -ItemType Directory -Force -Path $ArtifactDirectory | Out-Null
+
+          # This executable runs without the EyeRest.portable marker, so it
+          # stores configuration and logs in AppData.
+          $StandaloneExe = Join-Path $ArtifactDirectory "EyeRest-standalone.exe"
+          Copy-Item -LiteralPath (Join-Path $PortableDirectory "EyeRest.exe") -Destination $StandaloneExe
+
+          # This ZIP contains an EyeRest-portable folder. EyeRest.exe remains
+          # beside EyeRest.portable, so configuration and logs stay there.
+          if (Test-Path -LiteralPath $PortablePackageRoot) {
+            Remove-Item -LiteralPath $PortablePackageRoot -Recurse -Force
+          }
+          New-Item -ItemType Directory -Force -Path $PortablePackageDirectory | Out-Null
+
+          Copy-Item -LiteralPath (Join-Path $PortableDirectory "EyeRest.exe") -Destination $PortablePackageDirectory
+          Copy-Item -LiteralPath (Join-Path $PortableDirectory "EyeRest.portable") -Destination $PortablePackageDirectory
+
+          $PortableZip = Join-Path $ArtifactDirectory "EyeRest-portable-windows-x64.zip"
+          Compress-Archive -Path $PortablePackageDirectory -DestinationPath $PortableZip -Force
+
+          $SetupExe = @(Get-ChildItem -LiteralPath (Join-Path $BundleDirectory "nsis") -Filter "*.exe" -File)
+          $Msi = @(Get-ChildItem -LiteralPath (Join-Path $BundleDirectory "msi") -Filter "*.msi" -File)
+
+          if ($SetupExe.Count -ne 1 -or $Msi.Count -ne 1) {
+            throw "Expected exactly one NSIS setup executable and one MSI package."
+          }
+
+          $SetupDestination = Join-Path $ArtifactDirectory $SetupExe[0].Name
+          $MsiDestination = Join-Path $ArtifactDirectory $Msi[0].Name
+
+          Copy-Item -LiteralPath $SetupExe[0].FullName -Destination $SetupDestination
+          Copy-Item -LiteralPath $Msi[0].FullName -Destination $MsiDestination
+
+          $HashTargets = @(
+            Get-Item -LiteralPath $StandaloneExe
+            Get-Item -LiteralPath $PortableZip
+            Get-Item -LiteralPath $SetupDestination
+            Get-Item -LiteralPath $MsiDestination
+          )
+
+          $HashLines = $HashTargets | ForEach-Object {
+            $Hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$Hash  $($_.Name)"
+          }
+          $HashLines | Set-Content -LiteralPath (Join-Path $ArtifactDirectory "SHA256SUMS.txt") -Encoding ascii
+          $HashLines | Write-Host
+
+      - name: Upload Windows packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: EyeRest-windows-x64
+          path: dist/artifacts
+          if-no-files-found: error
+          retention-days: 7

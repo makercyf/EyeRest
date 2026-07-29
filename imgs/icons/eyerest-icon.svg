@@ -1,0 +1,81 @@
+<svg
+  width="256"
+  height="256"
+  viewBox="0 0 256 256"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <linearGradient
+  id="bg"
+  x1="28"
+  y1="20"
+  x2="228"
+  y2="236"
+  gradientUnits="userSpaceOnUse"
+>
+  <stop offset="0" stop-color="#5AB7A6" />
+  <stop offset="0.55" stop-color="#2D8879" />
+  <stop offset="1" stop-color="#195D54" />
+</linearGradient>
+  </defs>
+
+  <!-- Rounded app icon background -->
+  <rect x="8" y="8" width="240" height="240" rx="42" fill="url(#bg)" />
+
+  <!-- Main countdown ring -->
+  <circle
+    cx="128"
+    cy="128"
+    r="70"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="18"
+    stroke-linecap="round"
+    stroke-dasharray="318 122"
+    transform="rotate(10 128 128)"
+  />
+
+  <!-- Remaining time segments -->
+  <circle
+    cx="128"
+    cy="128"
+    r="70"
+    fill="none"
+    stroke="#BDE9E1"
+    stroke-opacity="0.9"
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-dasharray="8.796 21.991 8.796 21.991 8.796 369.451"
+    transform="rotate(-68 128 128)"
+  />
+
+  <!-- Closed eye -->
+  <path
+    d="M92 123 Q128 154 164 123"
+    stroke="#083E38"
+    stroke-width="16"
+    stroke-linecap="round"
+    fill="none"
+  />
+
+  <!-- Eyelashes -->
+  <path
+    d="M108 136 L100 145"
+    stroke="#083E38"
+    stroke-width="14"
+    stroke-linecap="round"
+  />
+  <path
+    d="M128 141 L128 151"
+    stroke="#083E38"
+    stroke-width="14"
+    stroke-linecap="round"
+  />
+  <path
+    d="M148 136 L156 145"
+    stroke="#083E38"
+    stroke-width="14"
+    stroke-linecap="round"
+  />
+</svg>
