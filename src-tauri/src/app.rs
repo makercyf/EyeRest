@@ -4,6 +4,7 @@ use crate::core::scheduler::ReminderScheduler;
 use crate::core::suppression::SuppressionEngine;
 use crate::core::suppression::{SuppressionReason, SuppressionStatus};
 use crate::detectors::{fullscreen, idle, whitelist};
+use crate::platform;
 use crate::services::{
     audio, autostart,
     config::ConfigService,
@@ -61,6 +62,10 @@ pub fn run() {
             };
 
             app.manage(state);
+            if let Some(window) = app.get_webview_window(overlay::SETTINGS_LABEL) {
+                platform::windows::apply_dpi_aware_webview_icons(&window)
+                    .map_err(|error| tauri::Error::Anyhow(anyhow::anyhow!(error.to_string())))?;
+            }
             tray::create_tray(app.handle())
                 .map_err(|error| tauri::Error::Anyhow(anyhow::anyhow!(error.to_string())))?;
 
@@ -101,6 +106,14 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if window.label() == overlay::SETTINGS_LABEL {
+                if matches!(event, tauri::WindowEvent::ScaleFactorChanged { .. }) {
+                    if let Err(error) = platform::windows::apply_dpi_aware_window_icons(window) {
+                        logging::record_diagnostic(
+                            DiagnosticSeverity::Warning,
+                            format!("Taskbar icon could not be updated for the new DPI: {error}"),
+                        );
+                    }
+                }
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                     api.prevent_close();
                     let _ = window.hide();

@@ -1,4 +1,5 @@
 use crate::error::AppResult;
+use crate::platform;
 use crate::services::{config::AppSettings, monitor};
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 
@@ -11,12 +12,14 @@ pub fn show_settings_window(app: &AppHandle) -> AppResult<()> {
         return Ok(());
     }
 
-    WebviewWindowBuilder::new(app, SETTINGS_LABEL, WebviewUrl::App("index.html".into()))
-        .title("EyeRest Settings")
-        .inner_size(920.0, 680.0)
-        .resizable(true)
-        .center()
-        .build()?;
+    let window =
+        WebviewWindowBuilder::new(app, SETTINGS_LABEL, WebviewUrl::App("index.html".into()))
+            .title("EyeRest Settings")
+            .inner_size(920.0, 680.0)
+            .resizable(true)
+            .center()
+            .build()?;
+    platform::windows::apply_dpi_aware_webview_icons(&window)?;
 
     Ok(())
 }

@@ -540,7 +540,7 @@ label {
 
 .overlay button.danger {
   background: var(--danger, #f05d5e);
-  color: #111111;
+  color: var(--button-text, #111111);
 }
 
 .countdown {

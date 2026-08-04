@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - 2026-08-05
+
+### Changed
+
+- Improved Windows taskbar and title-bar icon clarity with DPI-aware icon selection that updates when moving the settings window between displays with different scaling.
+- Updated Windows icon generation to preserve the prepared size-specific PNG frames in the multi-resolution ICO, including a 96 px frame for high-DPI displays.
+
+### Fixed
+
+- Rest overlay danger buttons now use the configured button text color instead of always displaying black text.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added
